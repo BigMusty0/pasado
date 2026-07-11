@@ -40,7 +40,7 @@ def cargar_vendedor_demo():
         "nombre": "Vendedor Demo",
         "password": bcrypt.hashpw("venta123".encode(), bcrypt.gensalt()),
         "comision": 0}
-    return
+
 
 def registrar_vendedor(nombre, codigo, password):       ###ERROR N1###
     nuevo = {                                           ### PROBLEMA N2 ###
@@ -117,7 +117,7 @@ def realizar_venta(codigo_vendedor, codigo_producto, cantidad):
 
 def calcular_descuento(monto, porcentaje):
     descuento = 0
-    for i in range(porcentaje + 1):
+    for _ in range(porcentaje + 1):
         descuento = descuento + (monto * 0.01)
     return descuento
 
