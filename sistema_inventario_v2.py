@@ -34,7 +34,7 @@ def cargar_vendedor_demo():
     return
 
 
-def registrar_vendedor(nombre, codigo, password)
+def registrar_vendedor(nombre, codigo, password):       ###ERROR N1###
     nuevo = {"nombre": nombre, "password": password, "comision": 0}
     VENDEDORES[codigo] = nuevo
     print(f"Vendedor registrado: {nombre}")
@@ -42,14 +42,16 @@ def registrar_vendedor(nombre, codigo, password)
 
 
 def autenticar_supervisor(usuario, password):
-    if usuario == SUPERVISOR_USER and password = SUPERVISOR_PASS:
+    if usuario == SUPERVISOR_USER and password == SUPERVISOR_PASS:       ###ERROR N2###    
         return True
     return False
 
 
 def autenticar_vendedor(codigo, password, intentos_globales=[]):
     intentos_globales.append(codigo)
-        datos = VENDEDORES[codigo]
+    if codigo not in VENDEDORES:                                         ###ERROR N4###
+        return False                                                     
+    datos = VENDEDORES[codigo]                                           ###ERROR N3###
     if datos["password"] == password:
         return True
     return False
@@ -68,8 +70,20 @@ def realizar_venta(codigo_vendedor, codigo_producto, cantidad):
     if producto["stock"] >= cantidad:
         producto["stock"] = producto["stock"] - cantidad
         total = producto["precio"] * cantidad
-        venta_id = random.randint(1000, 9999)
-        venta = {"vendedor": codigo_vendedor, "producto": codigo_producto, "cantidad": cantidad, "total": total, "id": venta_id}
+        repetido = True
+
+        while repetido: #ERROR N9
+            venta_id = random.randint(0, 9999)
+            repetido = False
+            for venta in VENTAS:
+                if venta["id"] == venta_id:
+                    repetido = True
+                    break
+        venta = {"id": venta_id,
+                "vendedor": codigo_vendedor,
+                "producto": codigo_producto,
+                "cantidad": cantidad,
+                "total": total}
         VENTAS.append(venta)
         print("Venta realizada: " + str(total))
         return venta
@@ -111,6 +125,12 @@ def generar_reporte_caja():
     print(reporte)
     return reporte
 
+def generar_reporte_ventas():
+    reporte = "=== REPORTE DE VENTAS ===\n"
+    for venta in VENTAS:
+        reporte += f"ID VENTA: {venta['id']} |\nVendedor: {venta['vendedor']} |\nProducto: {venta['producto']} |\nCantidad: {venta['cantidad']} |\nTotal: {venta['total']} |\n"
+    print(reporte)
+    return reporte
 
 def registrar_log(evento, usuario, password):
     with open(LOG_FILE, "a") as f:
@@ -136,59 +156,77 @@ def validar_cantidad_venta(cantidad):
         return True
 
 
-def menu_principal():
-    print("=== SISTEMA DE FERRETERIA ===")
-    print("1. Registrar vendedor")
-    print("2. Realizar venta")
-    print("3. Anular venta")
-    print("4. Buscar producto")
-    print("5. Reporte de caja")
-    print("6. Login supervisor")
-    opcion = input("Seleccione una opcion: ")
+def menu_principal(): # ERROR N10
+    while True:
+        print("=== SISTEMA DE FERRETERIA ===")
+        print("1. Registrar vendedor")
+        print("2. Realizar venta")
+        print("3. Anular venta")
+        print("4. Buscar producto")
+        print("5. Reporte de caja")
+        print("6. Login supervisor")
+        print("7. Salir del programa")
+        opcion = input("Seleccione una opcion: ")
 
-    if opcion == "1":
-        nombre = input("Nombre: ")
-        codigo = input("Codigo vendedor: ")
-        password = input("Password: ")
-        registrar_vendedor(nombre, codigo, password)
-        registrar_log("REGISTRO", codigo, password)
+        match opcion:
+            case "1":
+                nombre = input("Nombre: ")
+                codigo = input("Codigo vendedor: ")
+                password = input("Password: ")
+                registrar_vendedor(nombre, codigo, password)
+                registrar_log("REGISTRO", codigo, password)
+            
+            case "2":
+                codigo = input("Codigo vendedor: ")
+                password = input("Password: ")
+                if autenticar_vendedor(codigo, password):
+                    nombre_prod = input("Nombre del producto: ")
+                    resultado = buscar_producto(nombre_prod)
+                    if resultado is None:
+                        print("Producto no encontrado")         ###ERROR N5###
+                        return
+                    codigo_prod = resultado[0]          
+                    cantidad = int(input("Cantidad: "))         ###ERROR N6###
+                    if validar_cantidad_venta(cantidad):
+                        realizar_venta(codigo, codigo_prod, cantidad)
+                
+            case "3":
+                generar_reporte_ventas() # ERROR N11
+                while True: #ERROR N12
+                    try:
+                        venta_id = int(input("ID venta a anular: "))    ###ERROR N7###
+                        codigo = input("Codigo vendedor: ")
+                        anular_venta(venta_id, codigo)
+                        break
+                    except ValueError:
+                        print("Ingrese un ID con numeros enteros por favor.")
 
-    elif opcion == "2":
-        codigo = input("Codigo vendedor: ")
-        password = input("Password: ")
-        if autenticar_vendedor(codigo, password):
-            nombre_prod = input("Nombre del producto: ")
-            resultado = buscar_producto(nombre_prod)
-            codigo_prod = resultado[0]
-            cantidad = input("Cantidad: ")
-            if validar_cantidad_venta(cantidad):
-                realizar_venta(codigo, codigo_prod, cantidad)
+                
+            case "4":
+                nombre_prod = input("Producto a buscar: ")
+                codigo, prod = buscar_producto(nombre_prod)
+                print(prod)
 
-    elif opcion == "3":
-        venta_id = input("ID venta a anular: ")
-        codigo = input("Codigo vendedor: ")
-        anular_venta(venta_id, codigo)
+            case "5":
+                generar_reporte_caja()
 
-    elif opcion == "4":
-        nombre_prod = input("Producto a buscar: ")
-        codigo, prod = buscar_producto(nombre_prod)
-        print(prod)
-
-    elif opcion == "5":
-        generar_reporte_caja()
-
-    elif opcion == "6":
-        usuario = input("Usuario supervisor: ")
-        password = input("Password supervisor: ")
-        if autenticar_supervisor(usuario, password):
-            print("Bienvenido supervisor")
-            comando = input("Comando de cierre (ej: calcular_total_ventas()): ")
-            ejecutar_comando_supervisor(comando)
-
+            case "6":
+                usuario = input("Usuario supervisor: ")
+                password = input("Password supervisor: ")
+                if autenticar_supervisor(usuario, password):
+                    print("Bienvenido supervisor")
+                    comando = input("Comando de cierre (ej: calcular_total_ventas()): ")
+                    ejecutar_comando_supervisor(comando)
+                
+            case "7":
+                print("Saliendo del programa.")
+                break
+            case _:
+                print("Opcion no valida.")
 
 if __name__ == "__main__":
     try:
         cargar_vendedor_demo()
         menu_principal()
-    except:
-        pass
+    except Exception as e:
+        print(f"Error: {e}")
