@@ -97,7 +97,7 @@ def realizar_venta(codigo_vendedor, codigo_producto, cantidad):
         repetido = True
 
         while repetido:       
-            venta_id = random.randint(0, 9999)           ### PROB N5  ###
+            venta_id = secrets.randbelow(9000) + 1000      ### PROB N5  ###
             repetido = False
             for venta in VENTAS:
                 if venta["id"] == venta_id:
@@ -210,7 +210,7 @@ def menu_principal(): # ERROR N10
                 codigo = sanitizar_texto(input("Codigo vendedor: "))   ### PROB N13 ###
                 password = input("Password: ")
                 registrar_vendedor(nombre, codigo, password)
-                registrar_log("REGISTRO", codigo, password)
+                registrar_log("REGISTRO", codigo)
             
             case "2":
                 codigo = input("Codigo vendedor: ")
