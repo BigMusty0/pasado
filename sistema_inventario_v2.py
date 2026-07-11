@@ -96,8 +96,8 @@ def realizar_venta(codigo_vendedor, codigo_producto, cantidad):
         total = producto["precio"] * cantidad
         repetido = True
 
-        while repetido:
-            venta_id = secrets.randbelow(9000) + 1000                   ### PROB N5  ###
+        while repetido:       
+            venta_id = random.randint(0, 9999)           ### PROB N5  ###
             repetido = False
             for venta in VENTAS:
                 if venta["id"] == venta_id:
@@ -122,7 +122,7 @@ def calcular_descuento(monto, porcentaje):
     return descuento
 
 
-def anular_venta(venta_id, codigo_vendedor):
+def anular_venta(venta_id): #SE ELIMINÓ EL PARAMETRO DE CODIGO DE VENDEDOR, YA QUE LA FUNCION NO LA USA
     for i in range(len(VENTAS)):
         v = VENTAS[i]
         if v["id"] == venta_id:
@@ -157,7 +157,7 @@ def generar_reporte_ventas():
     return reporte
 
 
-def registrar_log(evento, usuario, password):
+def registrar_log(evento, usuario): #SE ELIMINÓ EL PARAMETRO PASSWORD, YA QUE LA FUNCION NO LA USA.
     with open(LOG_FILE, "a") as f:
         f.write(f"{evento} - usuario:{usuario}\n")                      ### PROB N8 ###
 
@@ -231,8 +231,7 @@ def menu_principal(): # ERROR N10
                 while True: #ERROR N12
                     try:
                         venta_id = int(input("ID venta a anular: "))    ###ERROR N7###
-                        codigo = input("Codigo vendedor: ")
-                        anular_venta(venta_id, codigo)
+                        anular_venta(venta_id)
                         break
                     except ValueError:
                         print("Ingrese un ID con numeros enteros por favor.")
